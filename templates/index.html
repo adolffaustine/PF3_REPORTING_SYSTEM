@@ -1,0 +1,44 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block body %}
+    <div class="container container-mine">
+        <div class="d-flex flex-row justify-content-between">
+            <h1>All Incidents</h1>
+            <button class="btn btn-outline-primary"><a href="{% url 'core:addIncident' %}">Add a Incident</a></button>
+        </div>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>S.N.</th>
+                        <th>Title</th>
+                        <th>Urgency</th>
+                        <th>Triggered</th>
+                        <th>Acknoledged</th>
+                        <th>Resolved</th>
+                        <th>Created Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for incident in incidents %}
+                        <tr>
+                            <td>{{forloop.counter}}</td>
+                            <td><a href="{{ incident.get_absolute_url }}">{{incident.title}}</a></td>
+                            <td>{{incident.urgency}}</td>
+                            <td>{{incident.triggered}}</td>
+                            <td>{{incident.acknowledged}}</td>
+                            <td>{{incident.resolved}}</td>
+                            <td>{{incident.created_at}}</td>
+                            {% if request.user.is_authenticated and request.user.is_staff %}
+                            <td><button class="btn btn-warning"><a href="{% url 'core:deleteIncident' incident.pk %}">Delete</a></button></td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

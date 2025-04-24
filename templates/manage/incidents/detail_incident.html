@@ -1,0 +1,78 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+{% block title %}{{incident.title}}{% endblock %}
+
+{% block body %}
+    
+    <div class="container container-mine">
+        <h1>Incident: {{incident.title}}</h1>
+        <strong>Description:</strong>
+        <p>{{incident.description}}</p>
+        <div class="row">
+            <div class="col-6 col-md-6">
+                <p><strong>Urgency Level: </strong>{{incident.urgency}}</p>
+                <p><strong>reported by:</strong>{{ incident.reported_by }}</p>
+                <p><strong>Created At: </strong>{{incident.created_at|timesince}} ago</p>
+                <p><strong>Updated At: </strong>{{incident.updated_at|timesince}} ago</p>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
+                    Update Status
+                    </button>
+            </div>
+            <div class="col-6 col-md-6">
+                <p><strong>Assigned To: <a href="{{incident.assigned_to.get_absolute_url}}">{{incident.assigned_to}}</a>
+                    {% if request.user.is_authenticated and request.user.is_staff %}
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                    Assign
+                    </button>
+                    {% endif %}
+                </strong></p>
+                <p><strong>Triggered: {{incident.triggered}}</strong></p>
+                <p><strong>Acknowledged: {{incident.acknowledged}}</strong></p>
+                <p><strong>Resolved: {{incident.resolved}}</strong></p>
+            </div>
+                        <!-- Button trigger modal -->
+            
+            <!-- Modal -->
+            <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">Assign this incident to</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form method = "post">
+                            {% csrf_token %}
+                            {{assign_incident_form|crispy}}
+                            <input type="submit" value="Assign to" class="btn btn-outline-primary">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </form>
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            <!-- Modal for udpating status-->
+            <div class="modal fade" id="updateStatusModal" tabindex="-1" aria-labelledby="updateStatusModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="updateStatusModalLabel">Assign this incident to</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form method = "post">
+                            {% csrf_token %}
+                            {{update_status_form|crispy}}
+                            <input type="submit" value="Update Status" class="btn btn-outline-primary">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </form>
+                    </div>
+                </div>
+                </div>
+            </div>
+  
+        </div>
+        
+    </div>
+{% endblock %}
