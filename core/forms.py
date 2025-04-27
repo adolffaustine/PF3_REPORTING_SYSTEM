@@ -6,7 +6,11 @@ class AddIncidentForm(forms.ModelForm):
     class Meta:
         model = Incident
         fields = [
+
             'title',
+            'Name_of_Patient',
+            'Date_of_Accident',
+            'Date_of_Admission',
             'urgency',
             'triggered',
             'acknowledged',

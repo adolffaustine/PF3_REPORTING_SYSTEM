@@ -3,20 +3,25 @@
 {% block title %}Home{% endblock %}
 
 {% block body %}
-    <div class="container container-mine">
-        <div class="d-flex flex-row justify-content-between">
-            <h1>All Incidents</h1>
-            <button class="btn btn-outline-primary"><a href="{% url 'core:addIncident' %}">Add a Incident</a></button>
+    {# Changed container to container-fluid for full width #}
+    <div class="container-fluid container-mine">
+        <div class="d-flex flex-row justify-content-between mb-3"> {# Added mb-3 for spacing #}
+            <h1>PF3 REPORT FORM</h1>
+            {# Removed the <a> tag inside the button for cleaner Bootstrap styling #}
+            <a href="{% url 'core:addIncident' %}" class="btn btn-outline-primary">Add an Incident</a>
         </div>
-        <div class="table-responsive">
+        <div class="table-responsive" >
             <table class="table">
                 <thead>
                     <tr>
                         <th>S.N.</th>
                         <th>Title</th>
+                        <th>Name of Patient</th>
+                        <th>Date of Accident</th>
+                        <th>Date of Admission</th>
                         <th>Urgency</th>
                         <th>Triggered</th>
-                        <th>Acknoledged</th>
+                        <th>Acknowledged</th> {# Corrected typo #}
                         <th>Resolved</th>
                         <th>Created Date</th>
                         <th>Action</th>
@@ -27,14 +32,26 @@
                         <tr>
                             <td>{{forloop.counter}}</td>
                             <td><a href="{{ incident.get_absolute_url }}">{{incident.title}}</a></td>
+                            <td>{{incident.Name_of_Patient}}</td>
+                            <td>{{incident.Date_of_Accident}}</td>
+                            <td>{{incident.Date_of_Admission}}</td>
                             <td>{{incident.urgency}}</td>
                             <td>{{incident.triggered}}</td>
                             <td>{{incident.acknowledged}}</td>
                             <td>{{incident.resolved}}</td>
                             <td>{{incident.created_at}}</td>
                             {% if request.user.is_authenticated and request.user.is_staff %}
-                            <td><button class="btn btn-warning"><a href="{% url 'core:deleteIncident' incident.pk %}">Delete</a></button></td>
+                            <td>
+                                {# Removed the <a> tag inside the button for cleaner Bootstrap styling #}
+                                <a href="{% url 'core:deleteIncident' incident.pk %}" class="btn btn-warning btn-sm">Delete</a> {# Added btn-sm for smaller button #}
+                            </td>
+                            {% else %}
+                             <td></td> {# Add empty cell if user cannot delete #}
                             {% endif %}
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="11" class="text-center">No incidents found.</td> {# Added colspan and message for empty table #}
                         </tr>
                     {% endfor %}
                 </tbody>

@@ -124,7 +124,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = 'static/'
+# settings.py
+
+STATIC_URL = '/static/'  # This is the URL prefix for static files
+
+STATICFILES_DIRS = [
+    BASE_DIR / "core" / "static", #core is your app, change it with your app name.
+]
 
 
 MEDIA_URL = "/media/"
