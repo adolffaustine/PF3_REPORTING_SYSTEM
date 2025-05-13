@@ -5,6 +5,7 @@ from core import views
 app_name = 'core'
 
 urlpatterns = [
+    
     path('', views.index, name='index'),
     path('manage/incident/add/', views.AddIncidentView.as_view(), name="addIncident"),
     path('manage/incident/<int:pk>/delete/', views.IncidentDeleteView.as_view(), name="deleteIncident"),

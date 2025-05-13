@@ -125,6 +125,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 # settings.py
+# Make sure LOGIN_URL uses the namespace we defined
+LOGIN_URL = 'accounts:login'
+
+# Where to redirect after login if the view doesn't specify or if ?next isn't used
+LOGIN_REDIRECT_URL = 'core:index' # This now points to '/incidents/'
+
+# Where to redirect after logout (optional, but good practice)
+LOGOUT_REDIRECT_URL = 'accounts:login' # Send them back to the login page
 
 STATIC_URL = '/static/'  # This is the URL prefix for static files
 

@@ -17,13 +17,21 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
+from accounts.views import sign_in,sign_out
+from accounts.views import register
+from django.urls import reverse_lazy
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('ckeditor/', include('ckeditor_uploader.urls')),
-    path('', include('core.urls')),
-    path('user/', include('accounts.urls')),
+     path('logout', sign_out, name='logout'),
+    path('', sign_in, name='login'),
+    path('register', register, name='register'),
+    path('incidents/', include('core.urls', namespace='core')),
+    path('accounts/', include('accounts.urls', namespace='accounts')),
 ]
+
 
 
 if settings.DEBUG:
