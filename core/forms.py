@@ -27,7 +27,7 @@ class AssignIncidentForm(forms.ModelForm):
 
 
 class IncidentStatusUpdateForm(forms.ModelForm):
-    status_update = forms.BooleanField(widget=forms.HiddenInput, initial=True)
+    # status_update = forms.BooleanField(widget=forms.HiddenInput, initial=True)
     class Meta:
         model = Incident
         # This form is for Nurse/Doctor to update non-workflow critical flags.
