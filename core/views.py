@@ -5,7 +5,9 @@ from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic.edit import CreateView
 from django.views.generic import ListView, DetailView, DeleteView
-
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin # For class-based views
+from django.utils import timezone
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 
@@ -28,31 +30,65 @@ def index(request):
     return render(request, "index.html", context)
 
 
-class IncidentDetailView(View):
+class IncidentDetailView(LoginRequiredMixin, View):
     template_name = 'manage/incidents/detail_incident.html'
     def get(self,request, *args, **kwargs):
         incident = get_object_or_404(Incident, id=self.kwargs['pk'])
         assign_incident_form = AssignIncidentForm(instance=incident)
         update_status_form = IncidentStatusUpdateForm(instance=incident)
+        user_profile = request.user.profile if hasattr(request.user, 'profile') else None
+
         context = {
             'incident':incident,
             'assign_incident_form':assign_incident_form,
             'update_status_form':update_status_form,
+            'user_profile': user_profile,
         }
+        
         return render(request, self.template_name, context)
     
     def post(self, request, *args, **kwargs):
         incident = get_object_or_404(Incident, id=self.kwargs['pk'])
-        assign_incident_form = AssignIncidentForm(instance=incident)
-        update_status_form = IncidentStatusUpdateForm(instance=incident)
+        user_profile = request.user.profile if hasattr(request.user, 'profile') else None
+
+        # Doctor Approval Action
+        if "doctor_approve" in request.POST and user_profile and user_profile.is_doctor:
+            if incident.status == Incident.INCIDENT_STATUS.PENDING_DOCTOR_APPROVAL:
+                incident.approved_by_doctor = user_profile
+                incident.doctor_approval_date = timezone.now()
+                incident.status = Incident.INCIDENT_STATUS.PENDING_POLICE_ACKNOWLEDGEMENT
+                incident.doctor_comments = request.POST.get('doctor_comments', '')
+                incident.save()
+                messages.success(request, "Incident approved by Doctor and sent for Police acknowledgement.")
+            else:
+                messages.error(request, "Incident is not pending Doctor approval or you are not authorized.")
+            return redirect("core:detailIncident", pk=incident.pk)
+
+        # Police Acknowledgement Action
+        if "police_acknowledge" in request.POST and user_profile and user_profile.is_police:
+            if incident.status == Incident.INCIDENT_STATUS.PENDING_POLICE_ACKNOWLEDGEMENT:
+                incident.police_acknowledged_by = user_profile
+                incident.police_acknowledgement_date = timezone.now()
+                incident.status = Incident.INCIDENT_STATUS.ACKNOWLEDGED_BY_POLICE
+                incident.police_comments = request.POST.get('police_comments', '')
+                # incident.acknowledged = True # If you still have this field and want to use it
+                incident.save()
+                messages.success(request, "Incident acknowledged by Police.")
+            else:
+                messages.error(request, "Incident is not pending Police acknowledgement or you are not authorized.")
+            return redirect("core:detailIncident", pk=incident.pk)
+
+        # Fallback for existing forms if they are still used independently
+        assign_incident_form = AssignIncidentForm(request.POST or None, instance=incident)
+        update_status_form = IncidentStatusUpdateForm(request.POST or None, instance=incident) # Be cautious with this form
+
         if "assign_incident" in request.POST:
-            assign_incident_form = AssignIncidentForm(request.POST, instance=incident)
+            # assign_incident_form = AssignIncidentForm(request.POST, instance=incident)
             if assign_incident_form.is_valid():
                 assign_incident_form.save()
-                messages.success(request, "Successfull assigned incident to the team")
+                messages.success(request, "Successfully assigned incident to the team")
                 return redirect("core:detailIncident", pk=incident.pk)
         if "status_update" in request.POST:
-            update_status_form = IncidentStatusUpdateForm(request.POST, instance=incident)
             if update_status_form.is_valid():
                 update_status_form.save()
                 messages.success(request, "Incident Status Successfully updated")
@@ -61,6 +97,7 @@ class IncidentDetailView(View):
             'incident':incident,
             'assign_incident_form':assign_incident_form,
             'update_status_form':update_status_form,
+            'user_profile': user_profile,
         }
         return render(request, self.template_name, context)
 
@@ -72,9 +109,17 @@ class AddIncidentView(SuccessMessageMixin,CreateView):
     success_url = reverse_lazy("core:index")
 
     def form_valid(self, form):
-        if self.request.user.is_authenticated:
+        if self.request.user.is_authenticated and hasattr(self.request.user, 'profile'):
             form.instance.reported_by = self.request.user.profile
+            # Set initial status based on reporter's role
+            if self.request.user.profile.is_nurse:
+                form.instance.status = Incident.INCIDENT_STATUS.PENDING_DOCTOR_APPROVAL
+            else: # Victim or other staff not explicitly a nurse
+                form.instance.status = Incident.INCIDENT_STATUS.PENDING_POLICE_ACKNOWLEDGEMENT
             form.instance.save()
+        elif self.request.user.is_authenticated: # User has no profile, fallback or error
+            messages.error(self.request, "User profile not found. Cannot report incident.")
+            return self.form_invalid(form)
         return super().form_valid(form)
 
 class IncidentDeleteView(SuccessMessageMixin, DeleteView):

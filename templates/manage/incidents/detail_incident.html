@@ -1,78 +1,106 @@
+
+
 {% extends 'base/base.html' %}
-{% load crispy_forms_tags %}
-{% block title %}{{incident.title}}{% endblock %}
+
+{% block title %}Incident Details - {{ incident.title }}{% endblock %}
 
 {% block body %}
-    
-    <div class="container container-mine">
-        <h1>Incident: {{incident.title}}</h1>
-        <strong>Description:</strong>
-        <p>{{incident.description}}</p>
-        <div class="row">
-            <div class="col-6 col-md-6">
-                <p><strong>Urgency Level: </strong>{{incident.urgency}}</p>
-                <p><strong>reported by:</strong>{{ incident.reported_by }}</p>
-                <p><strong>Created At: </strong>{{incident.created_at|timesince}} ago</p>
-                <p><strong>Updated At: </strong>{{incident.updated_at|timesince}} ago</p>
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
-                    Update Status
-                    </button>
-            </div>
-            <div class="col-6 col-md-6">
-                <p><strong>Assigned To: <a href="{{incident.assigned_to.get_absolute_url}}">{{incident.assigned_to}}</a>
-                    {% if request.user.is_authenticated and request.user.is_staff %}
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
-                    Assign
-                    </button>
-                    {% endif %}
-                </strong></p>
-                <p><strong>Triggered: {{incident.triggered}}</strong></p>
-                <p><strong>Acknowledged: {{incident.acknowledged}}</strong></p>
-                <p><strong>Resolved: {{incident.resolved}}</strong></p>
-            </div>
-                        <!-- Button trigger modal -->
-            
-            <!-- Modal -->
-            <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="exampleModalLabel">Assign this incident to</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form method = "post">
-                            {% csrf_token %}
-                            {{assign_incident_form|crispy}}
-                            <input type="submit" value="Assign to" class="btn btn-outline-primary">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        </form>
-                    </div>
-                </div>
-                </div>
-            </div>
-
-            <!-- Modal for udpating status-->
-            <div class="modal fade" id="updateStatusModal" tabindex="-1" aria-labelledby="updateStatusModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="updateStatusModalLabel">Assign this incident to</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form method = "post">
-                            {% csrf_token %}
-                            {{update_status_form|crispy}}
-                            <input type="submit" value="Update Status" class="btn btn-outline-primary">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        </form>
-                    </div>
-                </div>
-                </div>
-            </div>
-  
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Incident: {{ incident.title }}</h2>
+            <p class="card-subtitle mb-2 text-muted">Status: <span class="badge 
+                {% if incident.status == incident.INCIDENT_STATUS.PENDING_DOCTOR_APPROVAL %}bg-warning text-dark
+                {% elif incident.status == incident.INCIDENT_STATUS.PENDING_POLICE_ACKNOWLEDGEMENT %}bg-info text-dark
+                {% elif incident.status == incident.INCIDENT_STATUS.ACKNOWLEDGED_BY_POLICE %}bg-success
+                {% elif incident.status == incident.INCIDENT_STATUS.RESOLVED %}bg-primary
+                {% elif 'REJECTED' in incident.status %}bg-danger
+                {% else %}bg-secondary
+                {% endif %}">{{ incident.get_status_display }}</span>
+            </p>
         </div>
-        
+        <div class="card-body">
+            <p><strong>Reported by:</strong> {{ incident.reported_by.user.username|default:"N/A" }} on {{ incident.created_at|date:"Y-m-d H:i" }}</p>
+            <p><strong>Patient Name:</strong> {{ incident.Name_of_Patient }}</p>
+            <p><strong>Description:</strong> {{ incident.description|linebreaksbr }}</p>
+            <p><strong>Urgency:</strong> {{ incident.get_urgency_display }}</p>
+            <p><strong>Date of Accident:</strong> {{ incident.Date_of_Accident|date:"Y-m-d H:i" }}</p>
+            <p><strong>Date of Admission:</strong> {{ incident.Date_of_Admission|date:"Y-m-d H:i" }}</p>
+            
+            {% if incident.is_approved_by_doctor %}
+                <hr>
+                <h5 class="text-success">Doctor's Approval</h5>
+                <p><strong>Approved by:</strong> Dr. {{ incident.doctor_approved_by.user.get_full_name|default:incident.doctor_approved_by.user.username }}</p>
+                <p><strong>Approval Date:</strong> {{ incident.doctor_approval_date|date:"Y-m-d H:i" }}</p>
+                {% if incident.doctor_comments %}<p><strong>Comments:</strong> {{ incident.doctor_comments|linebreaksbr }}</p>{% endif %}
+            {% endif %}
+
+            {% if incident.is_acknowledged_by_police %}
+                <hr>
+                <h5 class="text-success">Police Acknowledgement</h5>
+                <p><strong>Acknowledged by:</strong> Officer {{ incident.police_acknowledged_by.user.get_full_name|default:incident.police_acknowledged_by.user.username }}</p>
+                <p><strong>Acknowledgement Date:</strong> {{ incident.police_acknowledgement_date|date:"Y-m-d H:i" }}</p>
+                {% if incident.police_comments %}<p><strong>Comments:</strong> {{ incident.police_comments|linebreaksbr }}</p>{% endif %}
+            {% endif %}
+        </div>
+        <div class="card-footer">
+            {% if user_profile %}
+                <form method="post" class="mb-3">
+                    {% csrf_token %}
+                    {% if user_profile.is_doctor and incident.status == incident.INCIDENT_STATUS.PENDING_DOCTOR_APPROVAL %}
+                        <div class="mb-3">
+                            <label for="doctor_comments" class="form-label">Doctor's Comments (Optional):</label>
+                            <textarea name="doctor_comments" id="doctor_comments" class="form-control" rows="3"></textarea>
+                        </div>
+                        <button type="submit" name="doctor_approve" class="btn btn-primary"><i class="fas fa-check-circle"></i> Approve Incident (Doctor)</button>
+                        {# Add a reject button if needed #}
+                        {# <button type="submit" name="doctor_reject" class="btn btn-danger"><i class="fas fa-times-circle"></i> Reject Incident (Doctor)</button> #}
+                    {% endif %}
+
+                    {% if user_profile.is_police and incident.status == incident.INCIDENT_STATUS.PENDING_POLICE_ACKNOWLEDGEMENT %}
+                         <div class="mb-3">
+                            <label for="police_comments" class="form-label">Police Comments (Optional):</label>
+                            <textarea name="police_comments" id="police_comments" class="form-control" rows="3"></textarea>
+                        </div>
+                        <button type="submit" name="police_acknowledge" class="btn btn-success"><i class="fas fa-user-shield"></i> Acknowledge Incident (Police)</button>
+                        {# Add a reject button if needed #}
+                        {# <button type="submit" name="police_reject" class="btn btn-danger"><i class="fas fa-ban"></i> Reject Incident (Police)</button> #}
+                    {% endif %}
+                </form>
+            {% endif %}
+
+            {% comment %} Forms for assigning to team or general status update - review if still needed with new workflow {% endcomment %}
+            {% if user_profile.is_police or user_profile.is_doctor %} {# Example condition #}
+                {% if assign_incident_form %}
+                <div class="mt-3">
+                    <h5>Assign to Team</h5>
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ assign_incident_form.as_p }}
+                        <button type="submit" name="assign_incident" class="btn btn-info btn-sm"><i class="fas fa-users"></i> Assign Team</button>
+                    </form>
+                </div>
+                {% endif %}
+
+                {% if update_status_form %} {# Be careful with this form as it might override workflow status #}
+                <div class="mt-3">
+                    <h5>Update General Status (e.g., to Resolved)</h5>
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ update_status_form.as_p }}
+                        <button type="submit" name="status_update" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Update Status</button>
+                    </form>
+                </div>
+                {% endif %}
+            {% endif %}
+
+            <div class="mt-3">
+                <a href="{% url 'core:index' %}" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left"></i> Back to List</a>
+                {% if request.user.is_staff %}
+                    <a href="{% url 'core:deleteIncident' incident.pk %}" class="btn btn-danger btn-sm float-end"><i class="fas fa-trash"></i> Delete Incident</a>
+                {% endif %}
+            </div>
+        </div>
     </div>
+</div>
 {% endblock %}

@@ -1,6 +1,6 @@
 from django import forms
 
-from core.models import Incident, Team, TeamMember
+from .models import Incident, Team, TeamMember # Corrected import path for models
 
 class AddIncidentForm(forms.ModelForm):
     class Meta:
@@ -12,8 +12,8 @@ class AddIncidentForm(forms.ModelForm):
             'Date_of_Accident',
             'Date_of_Admission',
             'urgency',
-            'triggered',
-            'acknowledged',
+            'triggered','resolved', # Removed 'acknowledged'
+            'assigned_to', # assigned_to might be better handled separately or by specific roles
             'description',
         ]
 
@@ -29,7 +29,8 @@ class IncidentStatusUpdateForm(forms.ModelForm):
     status_update = forms.BooleanField(widget=forms.HiddenInput, initial=True)
     class Meta:
         model = Incident
-        fields = ['acknowledged','resolved']
+        fields = ['status','triggered','resolved'] # Removed 'acknowledged'
+
 
 class UpdateTeamDetail(forms.ModelForm):
     update_detail = forms.BooleanField(widget=forms.HiddenInput, initial=True)

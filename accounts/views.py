@@ -59,14 +59,14 @@ def register(request):
         if form.is_valid():
             form.save()
             messages.success(request, 'User account successfully created')
-            return redirect('login')
+            return redirect('accounts:login')
         else:
             return render(request, 'accounts/register.html', {'form': form})
 
 # User sign-out view
 def sign_out(request):
     logout(request)
-    return redirect('login')
+    return redirect('accounts:login')
 
 # class UserLoginView(SuccessMessageMixin, LoginView):
 #     form_class = UserLoginForm

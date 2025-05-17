@@ -20,9 +20,10 @@
                         <th>Name of Patient</th>
                         <th>Date of Accident</th>
                         <th>Date of Admission</th>
+                        <th>Status</th>
                         <th>Urgency</th>
                         <th>Triggered</th>
-                        <th>Acknowledged</th> {# Corrected typo #}
+                        <th>Police Acknowledged</th>
                         <th>Resolved</th>
                         <th>Created Date</th>
                         <th>Action</th>
@@ -36,9 +37,10 @@
                             <td>{{incident.Name_of_Patient}}</td>
                             <td>{{incident.Date_of_Accident}}</td>
                             <td>{{incident.Date_of_Admission}}</td>
-                            <td>{{incident.urgency}}</td>
+                            <td>{{incident.get_status_display}}</td>
+                            <td>{{incident.get_urgency_display}}</td>
                             <td>{{incident.triggered}}</td>
-                            <td>{{incident.acknowledged}}</td>
+                            <td>{{incident.is_acknowledged_by_police|yesno:"Yes,No"}}</td>
                             <td>{{incident.resolved}}</td>
                             <td>{{incident.created_at}}</td>
                             {% if request.user.is_authenticated and request.user.is_staff %}
