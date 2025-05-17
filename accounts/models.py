@@ -25,12 +25,22 @@ class Role(models.Model):
     def __str__(self):
         return self.role
 
+class Hospital(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    address = models.TextField(blank=True, null=True)
+    # The primary administrative user for this hospital
+    admin_user = models.OneToOneField(User, on_delete=models.SET_NULL, related_name='administered_hospital', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return self.name
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     avatar = models.ImageField(upload_to="user/profile", default="profile/avatar.jpeg")
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES.choices, null=True, blank=True)
     bio = models.TextField(null=True, blank=True)
+    hospital = models.ForeignKey(Hospital, on_delete=models.SET_NULL, null=True, blank=True, related_name='staff_profiles')
     date_of_birth = models.DateField(null=True, blank=True)
     is_leader = models.BooleanField(default=False)
     phone_number = PhoneNumberField(null=True, blank=True, region="KE") # Assuming Kenya region for example
@@ -53,8 +63,8 @@ class Profile(models.Model):
 
     @property
     def is_doctor(self):
-        """Checks if the user has the Doctor role."""
-        return self.has_role("Doctor")
+        """Checks if the user has the Doctor role OR the HospitalAdmin role."""
+        return self.has_role("Doctor") or self.has_role("HospitalAdmin")
 
     @property
     def is_nurse(self):
@@ -62,3 +72,14 @@ class Profile(models.Model):
         return self.has_role("Nurse")
 
 
+    @property
+    def is_patient_or_other(self):
+        """Checks if the user is likely a patient or other general user."""
+        if not self.user.is_staff and not self.is_doctor and not self.is_nurse and not self.is_police:
+            return True
+        return False
+    
+    @property
+    def is_hospital_admin(self):
+        """Checks if the user has the HospitalAdmin role."""
+        return self.has_role("HospitalAdmin")

@@ -1,0 +1,48 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Manage Hospitals{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Hospitals</h1>
+        <a href="{% url 'accounts:hospital_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus-circle"></i> Add New Hospital
+        </a>
+    </div>
+
+    {% if hospitals %}
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>Admin User</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for hospital in hospitals %}
+                <tr>
+                    <td>{{ hospital.name }}</td>
+                    <td>{{ hospital.address|default:"N/A" }}</td>
+                    <td>{{ hospital.admin_user.username|default:"N/A" }}</td>
+                    <td>{{ hospital.created_at|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        {# Add links for edit/delete later if needed #}
+                        <a href="#" class="btn btn-sm btn-info disabled">Edit</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info" role="alert">
+        No hospitals found. Click "Add New Hospital" to create one.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

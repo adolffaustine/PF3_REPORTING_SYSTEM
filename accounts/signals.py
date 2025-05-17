@@ -13,3 +13,5 @@ def profile_create(sender, instance, created, **kwargs):
     if created:
         profile = Profile.objects.create(user=instance)
         profile.save()
+
+

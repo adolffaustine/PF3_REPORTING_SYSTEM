@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Incident, Team, TeamMember # Corrected import path for models
+from .models import Incident, Team, TeamMember, Hospital # Corrected import path for models
 
 class AddIncidentForm(forms.ModelForm):
     class Meta:
@@ -14,6 +14,7 @@ class AddIncidentForm(forms.ModelForm):
             'urgency',
             'triggered','resolved', # Removed 'acknowledged'
             'assigned_to', # assigned_to might be better handled separately or by specific roles
+            'hospital',
             'description',
         ]
 
@@ -29,7 +30,9 @@ class IncidentStatusUpdateForm(forms.ModelForm):
     status_update = forms.BooleanField(widget=forms.HiddenInput, initial=True)
     class Meta:
         model = Incident
-        fields = ['status','triggered','resolved'] # Removed 'acknowledged'
+        # This form is for Nurse/Doctor to update non-workflow critical flags.
+        # The 'status' field will be handled by the view logic based on the 'resolved' flag.
+        fields = ['triggered','resolved']
 
 
 class UpdateTeamDetail(forms.ModelForm):

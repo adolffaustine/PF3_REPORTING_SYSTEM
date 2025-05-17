@@ -18,7 +18,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm
-
+from accounts.models import Profile, Role
 from django.core.exceptions import ValidationError
 
 from django import forms
@@ -91,3 +91,54 @@ class ProfileForm(forms.ModelForm):
             if dateOfBirth > date.today():
                 raise ValidationError("Invalid Date of Birth")
         return dateOfBirth
+
+class HospitalCreationForm(forms.Form):
+    hospital_name = forms.CharField(max_length=255, label="Hospital Name")
+    hospital_address = forms.CharField(widget=forms.Textarea, required=False, label="Hospital Address")
+    
+    admin_username = forms.CharField(max_length=150, label="Hospital Admin Username")
+    admin_email = forms.EmailField(label="Hospital Admin Email")
+    admin_password1 = forms.CharField(label="Password", widget=forms.PasswordInput)
+    admin_password2 = forms.CharField(label="Password confirmation", widget=forms.PasswordInput)
+
+    def clean_admin_username(self):
+        username = self.cleaned_data.get('admin_username')
+        if User.objects.filter(username=username).exists():
+            raise ValidationError("A user with this username already exists.")
+        return username
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password_1 = cleaned_data.get("admin_password1")
+        password_2 = cleaned_data.get("admin_password2")
+        if password_1 and password_2 and password_1 != password_2:
+            self.add_error('admin_password2', "Passwords do not match.")
+        return cleaned_data
+    
+
+class HospitalStaffCreationForm(forms.Form):
+    ROLE_CHOICES = [
+        ('Doctor', 'Doctor'),
+        ('Nurse', 'Nurse'),
+    ]
+    first_name = forms.CharField(max_length=150, label="First Name")
+    last_name = forms.CharField(max_length=150, label="Last Name")
+    username = forms.CharField(max_length=150, label="Username")
+    email = forms.EmailField(label="Email")
+    password = forms.CharField(label="Password", widget=forms.PasswordInput)
+    confirm_password = forms.CharField(label="Confirm Password", widget=forms.PasswordInput)
+    role = forms.ChoiceField(choices=ROLE_CHOICES, label="Assign Role")
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if User.objects.filter(username=username).exists():
+            raise ValidationError("A user with this username already exists.")
+        return username
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get("password")
+        confirm_password = cleaned_data.get("confirm_password")
+        if password and confirm_password and password != confirm_password:
+            self.add_error('confirm_password', "Passwords do not match.")
+        return cleaned_data

@@ -90,9 +90,19 @@ class IncidentDetailView(LoginRequiredMixin, View):
                 return redirect("core:detailIncident", pk=incident.pk)
         if "status_update" in request.POST:
             if update_status_form.is_valid():
-                update_status_form.save()
-                messages.success(request, "Incident Status Successfully updated")
+               # Save the form but don't commit to DB immediately
+                # This allows us to modify the instance before the final save
+                incident_instance = update_status_form.save(commit=False)
+                
+                # If the 'resolved' flag was set to True by the form
+                if incident_instance.resolved:
+                    incident_instance.status = Incident.INCIDENT_STATUS.RESOLVED
+                
+                incident_instance.save() # Now save the instance with any changes
+                messages.success(request, "Incident flags and status successfully updated.")
                 return redirect("core:detailIncident", pk=incident.pk)
+            else:
+                messages.error(request, f"Error updating flags: {update_status_form.errors}")
         context = {
             'incident':incident,
             'assign_incident_form':assign_incident_form,

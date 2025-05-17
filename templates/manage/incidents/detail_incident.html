@@ -25,6 +25,7 @@
             <p><strong>Description:</strong> {{ incident.description|linebreaksbr }}</p>
             <p><strong>Urgency:</strong> {{ incident.get_urgency_display }}</p>
             <p><strong>Date of Accident:</strong> {{ incident.Date_of_Accident|date:"Y-m-d H:i" }}</p>
+            <p><strong>At Hospital:</strong> {{ incident.hospital.name|default:"Not Specified" }}</p>
             <p><strong>Date of Admission:</strong> {{ incident.Date_of_Admission|date:"Y-m-d H:i" }}</p>
             
             {% if incident.is_approved_by_doctor %}
@@ -70,33 +71,41 @@
             {% endif %}
 
             {% comment %} Forms for assigning to team or general status update - review if still needed with new workflow {% endcomment %}
-            {% if user_profile.is_police or user_profile.is_doctor %} {# Example condition #}
-                {% if assign_incident_form %}
-                <div class="mt-3">
-                    <h5>Assign to Team</h5>
-                    <form method="post">
-                        {% csrf_token %}
-                        {{ assign_incident_form.as_p }}
-                        <button type="submit" name="assign_incident" class="btn btn-info btn-sm"><i class="fas fa-users"></i> Assign Team</button>
-                    </form>
-                </div>
-                {% endif %}
+             {% if user_profile %}
+                {% if user_profile.is_doctor or user_profile.is_nurse %}
+                    {% if assign_incident_form %}
+                    <div class="mt-3">
+                        <h5>Assign to Team</h5>
+                        <form method="post">
+                            {% csrf_token %}
+                            {{ assign_incident_form.as_p }}
+                            <button type="submit" name="assign_incident" class="btn btn-info btn-sm"><i class="fas fa-users"></i> Assign Team</button>
+                        </form>
+                    </div>
+                    {% endif %}
 
-                {% if update_status_form %} {# Be careful with this form as it might override workflow status #}
-                <div class="mt-3">
-                    <h5>Update General Status (e.g., to Resolved)</h5>
-                    <form method="post">
-                        {% csrf_token %}
-                        {{ update_status_form.as_p }}
-                        <button type="submit" name="status_update" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Update Status</button>
-                    </form>
-                </div>
+                 {% if update_status_form %}
+                    <div class="mt-3">
+                        <h5>Update Incident Flags (Triggered/Resolved)</h5>
+                        <form method="post">
+                            {% csrf_token %}
+                            {# Only show relevant fields from IncidentStatusUpdateForm for Nurse/Doctor #}
+                            {% if 'triggered' in update_status_form.fields %}<p>{{ update_status_form.triggered.label_tag }} {{ update_status_form.triggered }}</p>{% endif %}
+                            {% if 'resolved' in update_status_form.fields %}<p>{{ update_status_form.resolved.label_tag }} {{ update_status_form.resolved }}</p>{% endif %}
+                            {# The 'status' field from this form should ideally not be used directly by Nurse/Doctor if workflow is strict #}
+                            {# To allow them to set to 'RESOLVED': #}
+                            {% if 'status' in update_status_form.fields %}<p hidden>{{ update_status_form.status }}</p>{% endif %}
+                            <button type="submit" name="status_update" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Update Flags</button>
+                        </form>
+                    </div>
+                    {% endif %}
                 {% endif %}
             {% endif %}
 
             <div class="mt-3">
                 <a href="{% url 'core:index' %}" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left"></i> Back to List</a>
-                {% if request.user.is_staff %}
+                {% if request.user.is_staff and  request.user.profile.is_police %}
+                
                     <a href="{% url 'core:deleteIncident' incident.pk %}" class="btn btn-danger btn-sm float-end"><i class="fas fa-trash"></i> Delete Incident</a>
                 {% endif %}
             </div>

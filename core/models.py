@@ -6,7 +6,7 @@ from django.db import models
 from django.urls import reverse
 
 
-from accounts.models import Profile
+from accounts.models import Profile,Hospital
 
 # Create your models here.
 
@@ -61,7 +61,7 @@ class Incident(models.Model):
     Date_of_Admission = models.DateTimeField(null=True, blank=True)
     reported_by = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="reported_incidents", null=True, blank=True)
     assigned_to = models.ForeignKey(Team, on_delete=models.SET_NULL, related_name="assigned_incidents", null=True, blank=True)
-    # Workflow fields
+    hospital = models.ForeignKey(Hospital, on_delete=models.SET_NULL, null=True, blank=True, related_name="incidents_at_hospital")
     doctor_approved_by = models.ForeignKey(Profile, on_delete=models.SET_NULL, related_name="doctor_approved_incidents", null=True, blank=True)
     doctor_approval_date = models.DateTimeField(null=True, blank=True)
     doctor_comments = models.TextField(blank=True, null=True)

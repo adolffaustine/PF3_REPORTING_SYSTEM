@@ -1,19 +1,19 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.shortcuts import render, redirect
+from django.views.generic.list import ListView
+from django.views.generic.edit import FormView
 from django.views.generic import CreateView, DetailView
 from django.views import View
 from django.contrib.auth import authenticate, login, logout
-
+from .forms import CreateUserForm, LoginForm, CustomUserCreationForm, UserLoginForm, ProfileForm, CustomUserChangeForm, HospitalCreationForm, HospitalStaffCreationForm
 from django.contrib.auth.views import LoginView
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin,UserPassesTestMixin
 
 from django.urls import reverse_lazy
-
+from django.http import HttpResponseRedirect
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib import messages
-from accounts.forms import CreateUserForm, LoginForm
-from accounts.forms import CustomUserCreationForm, UserLoginForm, ProfileForm, CustomUserChangeForm
-from accounts.models import Profile
+from .models import Profile, Hospital, Role, User
+# Create your views here.
 # Create your views here.
 
 
@@ -68,19 +68,6 @@ def sign_out(request):
     logout(request)
     return redirect('accounts:login')
 
-# class UserLoginView(SuccessMessageMixin, LoginView):
-#     form_class = UserLoginForm
-#     template_name = 'accounts/login.html'
-#     success_message = "Login Successfull"
-#     success_url = reverse_lazy("core:index")
-#     def form_invalid(self, form):
-#         messages.error(self.request, "Error in Login")
-#         return super().form_invalid(form)
-    
-#     def dispatch(self, request, *args, **kwargs):
-#         if request.user.is_authenticated:
-#             return redirect('core:index')
-#         return super(UserLoginView,self).dispatch(request, *args, **kwargs)
 
 
 
@@ -124,3 +111,108 @@ class ProfileView(View):
             'profile':profile,
         }
         return render(request, self.template_name, context)
+
+
+class PoliceRequiredMixin(UserPassesTestMixin):
+    def test_func(self):
+        return hasattr(self.request.user, 'profile') and self.request.user.profile.is_police
+
+    def handle_no_permission(self):
+        messages.error(self.request, "You are not authorized to view this page.")
+        return redirect('core:index')
+
+class HospitalListView(LoginRequiredMixin, PoliceRequiredMixin, ListView):
+    model = Hospital
+    template_name = 'accounts/hospital_list.html' # Create this template
+    context_object_name = 'hospitals'
+
+class HospitalCreateView(LoginRequiredMixin, PoliceRequiredMixin, SuccessMessageMixin, FormView):
+    template_name = 'accounts/hospital_form.html' # Create this template
+    form_class = HospitalCreationForm
+    success_url = reverse_lazy('accounts:hospital_list')
+    success_message = "Hospital and Admin User created successfully."
+
+    def form_valid(self, form):
+        cleaned_data = form.cleaned_data
+        
+        # Create Hospital Admin User
+        admin_user = User.objects.create_user(
+            username=cleaned_data['admin_username'],
+            email=cleaned_data['admin_email'],
+            password=cleaned_data['admin_password1']
+        )
+        
+        # Create Profile for Admin User and assign "HospitalAdmin" role
+        hospital_admin_role, created = Role.objects.get_or_create(role="HospitalAdmin")
+        # Ensure profile is created for the new user
+        # If you have a signal to create profile, this might be redundant or ensure it runs.
+        # Otherwise, create it explicitly:
+        profile, profile_created = Profile.objects.get_or_create(user=admin_user)
+        profile.role.add(hospital_admin_role)
+        profile.save()
+
+        # Create Hospital
+        hospital = Hospital.objects.create(
+            name=cleaned_data['hospital_name'],
+            address=cleaned_data['hospital_address'],
+            admin_user=admin_user
+        )
+        # Link profile to hospital (optional for admin user, but good for consistency)
+        # profile.hospital = hospital 
+        # profile.save()
+        return super().form_valid(form)
+    
+
+class HospitalAdminRequiredMixin(UserPassesTestMixin):
+    def test_func(self):
+        if hasattr(self.request.user, 'profile') and self.request.user.profile.has_role("HospitalAdmin"):
+            # Also check if this HospitalAdmin is associated with a hospital
+            return hasattr(self.request.user, 'administered_hospital') and self.request.user.administered_hospital is not None
+        return False
+
+    def handle_no_permission(self):
+        messages.error(self.request, "You are not authorized to perform this action or not associated with a hospital.")
+        return redirect('core:index')
+    
+class HospitalStaffListView(LoginRequiredMixin, HospitalAdminRequiredMixin, ListView):
+    template_name = 'accounts/hospital_staff_list.html'
+    context_object_name = 'staff_members'
+
+    def get_queryset(self):
+        # Get the hospital administered by the current user
+        hospital_admin_user = self.request.user
+        try:
+            # The Hospital model has an 'admin_user' field linking to the User model
+            # The Profile model has a 'hospital' field linking to the Hospital model
+            admin_hospital = Hospital.objects.get(admin_user=hospital_admin_user)
+            return Profile.objects.filter(hospital=admin_hospital).exclude(user=hospital_admin_user).select_related('user')
+        except Hospital.DoesNotExist:
+            return Profile.objects.none()
+
+class HospitalStaffCreateView(LoginRequiredMixin, HospitalAdminRequiredMixin, SuccessMessageMixin, FormView):
+    template_name = 'accounts/hospital_staff_form.html'
+    form_class = HospitalStaffCreationForm
+    success_message = "Staff member created successfully."
+
+    def get_success_url(self):
+        return reverse_lazy('accounts:hospital_staff_list')
+
+    def form_valid(self, form):
+        cleaned_data = form.cleaned_data
+        hospital_admin_user = self.request.user
+        admin_hospital = hospital_admin_user.administered_hospital # Relies on related_name from Hospital.admin_user
+
+        new_staff_user = User.objects.create_user(
+            username=cleaned_data['username'],
+            email=cleaned_data['email'],
+            password=cleaned_data['password'],
+            first_name=cleaned_data['first_name'],
+            last_name=cleaned_data['last_name']
+        )
+
+        staff_role = Role.objects.get(role=cleaned_data['role']) # Ensure 'Doctor' and 'Nurse' roles exist
+        profile, created = Profile.objects.get_or_create(user=new_staff_user)
+        profile.role.add(staff_role)
+        profile.hospital = admin_hospital # Associate with the Hospital Admin's hospital
+        profile.save()
+        return super().form_valid(form)    

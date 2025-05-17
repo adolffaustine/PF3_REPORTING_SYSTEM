@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth import get_user_model
 
 from accounts.forms import CustomUserChangeForm, CustomUserCreationForm
-from accounts.models import Profile, Role
+from accounts.models import Profile, Role, Hospital
 # Register your models here.
 
 User = get_user_model()
@@ -32,3 +32,4 @@ class UserAdmin(UserAdmin):
 
 
 admin.site.register(Role)
+admin.site.register(Hospital)
