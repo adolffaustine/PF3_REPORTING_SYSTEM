@@ -12,4 +12,5 @@ urlpatterns = [
     path('manage/incident/<int:pk>/detail', views.IncidentDetailView.as_view(), name="detailIncident"),
     path('manage/teams/all/', views.TeamsListView.as_view(), name="teamsList"),
     path('manage/teams/<int:pk>/detail/', views.TeamDetailView.as_view(), name="teamDetail"),
+    path('incidents/manage/incident/<int:pk>/pdf/', views.render_incident_pdf, name='render_incident_pdf'), # New PDF URL
 ]

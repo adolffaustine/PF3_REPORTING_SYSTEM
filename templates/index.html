@@ -6,9 +6,32 @@
 {% block body %}
     
     <div class="container-fluid container-mine">
-        <div class="d-flex flex-row justify-content-between mb-3"> {# Added mb-3 for spacing #}
-            <h1>PF3 REPORT FORM</h1>
-            {# Removed the <a> tag inside the button for cleaner Bootstrap styling #}
+         <div class="d-flex flex-row justify-content-between align-items-center mb-3">
+             <h1>PF3 REPORT FORM</h1>
+             <div>
+                               {% if user_profile.is_hospital_admin or user_profile.is_doctor or user_profile.is_nurse %}
+                <div class="btn-group me-2">
+                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        Filter: {% if current_filter == 'all' %}All (My Hospital)
+                                {% elif current_filter == 'pending_my_approval' %}Pending My Approval
+                                {% elif current_filter == 'pending_doctor_approval_all' %}Pending Doctor Approval (All)
+                                {% elif current_filter == 'approved_by_doctor' %}Approved by Doctor
+                                {% else %}{{ current_filter|title }}
+                                {% endif %}
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'core:index' %}?filter=all">All (My Hospital)</a></li>
+                        {% if user_profile.is_hospital_admin or user_profile.is_doctor %}
+                        <li><a class="dropdown-item" href="{% url 'core:index' %}?filter=pending_my_approval">Pending My Approval</a></li>
+                        {% endif %}
+                        <li><a class="dropdown-item" href="{% url 'core:index' %}?filter=pending_doctor_approval_all">Pending Doctor Approval (All Staff)</a></li>
+                        <li><a class="dropdown-item" href="{% url 'core:index' %}?filter=approved_by_doctor">Approved by Doctor</a></li>
+                    </ul>
+                </div>
+                {% elif user_profile and user_profile.is_police %}
+                    <span class="badge bg-info text-dark fs-6">Police View: Awaiting Acknowledgement</span>
+                {% endif %}
+            </div>
             <a href="{% url 'core:addIncident' %}" class="btn btn-outline-primary">Add an Incident</a>
         </div>
         <div class="table-responsive" >

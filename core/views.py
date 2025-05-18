@@ -1,6 +1,10 @@
 from django.shortcuts import render, get_object_or_404, redirect
 
 from django.urls import reverse_lazy
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from xhtml2pdf import pisa # Import pisa
+import io # For in-memory file handling
 
 from django.views import View
 from django.views.generic.edit import CreateView
@@ -23,11 +27,48 @@ from django.contrib.auth.decorators import login_required
 # Create your views here.
 @login_required
 def index(request):
-    incidents = Incident.objects.all()
+    user_profile = request.user.profile if hasattr(request.user, 'profile') else None
+    incidents_qs = Incident.objects.all().order_by('-created_at') # Base queryset
+    filter_applied = request.GET.get('filter', 'all') # Default filter
+
+    if user_profile:
+        if user_profile.is_police:
+            # Police see incidents pending their acknowledgement or already processed by them
+            incidents_qs = incidents_qs.filter(
+                status__in=[
+                    Incident.INCIDENT_STATUS.PENDING_POLICE_ACKNOWLEDGEMENT,
+                    Incident.INCIDENT_STATUS.ACKNOWLEDGED_BY_POLICE,
+                    Incident.INCIDENT_STATUS.REJECTED_BY_POLICE, # If you have this status
+                    Incident.INCIDENT_STATUS.RESOLVED
+                ]
+            )
+            filter_applied = 'police_view' # Override filter for police
+        elif user_profile.is_hospital_admin or user_profile.is_doctor or user_profile.is_nurse:
+            if user_profile.hospital:
+                incidents_qs = incidents_qs.filter(hospital=user_profile.hospital)
+            
+            if filter_applied == 'pending_my_approval' and (user_profile.is_hospital_admin or user_profile.is_doctor):
+                # Show incidents pending approval by any doctor at their hospital
+                incidents_qs = incidents_qs.filter(status=Incident.INCIDENT_STATUS.PENDING_DOCTOR_APPROVAL)
+            elif filter_applied == 'pending_doctor_approval_all':
+                 incidents_qs = incidents_qs.filter(status=Incident.INCIDENT_STATUS.PENDING_DOCTOR_APPROVAL)
+            elif filter_applied == 'approved_by_doctor':
+                incidents_qs = incidents_qs.filter(status__in=[
+                    Incident.INCIDENT_STATUS.PENDING_POLICE_ACKNOWLEDGEMENT,
+                    Incident.INCIDENT_STATUS.ACKNOWLEDGED_BY_POLICE,
+                    Incident.INCIDENT_STATUS.RESOLVED
+                ]).exclude(doctor_approved_by__isnull=True) # Ensure a doctor has approved
+            # 'all' filter for hospital staff will show all incidents for their hospital (default)
+        # else: For victims or other users, they see all incidents for now, or you can filter by reported_by=user_profile
+
     context = {
-        "incidents":incidents,
+        "Incidents": incidents_qs,
+        "user_profile": user_profile,
+        "current_filter": filter_applied,
     }
     return render(request, "index.html", context)
+
+
 
 
 class IncidentDetailView(LoginRequiredMixin, View):
@@ -52,7 +93,7 @@ class IncidentDetailView(LoginRequiredMixin, View):
         user_profile = request.user.profile if hasattr(request.user, 'profile') else None
 
         # Doctor Approval Action
-        if "doctor_approve" in request.POST and user_profile and user_profile.is_doctor:
+        if "doctor_approve" in request.POST and user_profile and user_profile.is_hospital_admin:
             if incident.status == Incident.INCIDENT_STATUS.PENDING_DOCTOR_APPROVAL:
                 incident.approved_by_doctor = user_profile
                 incident.doctor_approval_date = timezone.now()
@@ -122,10 +163,14 @@ class AddIncidentView(SuccessMessageMixin,CreateView):
         if self.request.user.is_authenticated and hasattr(self.request.user, 'profile'):
             form.instance.reported_by = self.request.user.profile
             # Set initial status based on reporter's role
-            if self.request.user.profile.is_nurse:
+            user_profile = self.request.user.profile
+
+            # Incidents created by hospital staff or patients (who select a hospital)
+            # should go to PENDING_DOCTOR_APPROVAL first.
+            if user_profile.is_nurse or user_profile.is_doctor or user_profile.is_hospital_admin or user_profile.is_patient_or_other:
                 form.instance.status = Incident.INCIDENT_STATUS.PENDING_DOCTOR_APPROVAL
-            else: # Victim or other staff not explicitly a nurse
-                form.instance.status = Incident.INCIDENT_STATUS.PENDING_POLICE_ACKNOWLEDGEMENT
+            else: # Fallback, e.g., if a Police user creates an incident directly (if allowed)
+                form.instance.status = Incident.INCIDENT_STATUS.PENDING_POLICE_ACKNOWLEDGEMENT # Or PENDING_DOCTOR_APPROVAL if police also need it reviewed
             form.instance.save()
         elif self.request.user.is_authenticated: # User has no profile, fallback or error
             messages.error(self.request, "User profile not found. Cannot report incident.")
@@ -138,6 +183,30 @@ class IncidentDeleteView(SuccessMessageMixin, DeleteView):
     success_url = reverse_lazy("core:index")
     success_message = "Incident Deleted Successfully"
 
+# PDF Generation View
+@login_required
+def render_incident_pdf(request, pk):
+    incident = get_object_or_404(Incident, pk=pk)
+    user_profile = request.user.profile if hasattr(request.user, 'profile') else None
+
+    context = {
+        'incident': incident,
+        'user_profile': user_profile, # Pass user_profile if your PDF template needs it
+    }
+    html_string = render_to_string('manage/incidents/incident_pdf_template.html', context)
+
+    # Create a file-like buffer to receive PDF data.
+    buffer = io.BytesIO()
+
+    # Create a PDF object, using the buffer as its "file."
+    pisa_status = pisa.CreatePDF(html_string, dest=buffer)
+
+    # If error, show some funy view
+    if pisa_status.err:
+       return HttpResponse('We had some errors with code %s <pre>%s</pre>' % (pisa_status.err, html_string))
+    
+    buffer.seek(0)
+    return HttpResponse(buffer, content_type='application/pdf')
 
 class TeamsListView(ListView):
     model = Team
