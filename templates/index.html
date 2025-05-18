@@ -54,7 +54,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for incident in incidents %}
+                    {% for incident in Incidents %}
                         <tr>
                             <td>{{forloop.counter}}</td>
                             <td><a href="{{ incident.get_absolute_url }}">{{incident.title}}</a></td>
