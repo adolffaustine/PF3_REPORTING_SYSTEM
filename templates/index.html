@@ -1,0 +1,108 @@
+
+{% extends 'base/base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block body %}
+    
+    <div class="container-fluid container-mine">
+         <div class="text-center">
+           <h1>TANZANIA POLICE FORCE</h1>
+           <h1>MEDICAL EXAMINATION REPORTING SYSTEM</h1>
+       </div>
+         <div class="d-flex flex-row justify-content-between align-items-center mb-3">
+             <h1>PF3 REPORT OVERVIEW</h1>
+             <div>
+                               {% if user_profile.is_hospital_admin or user_profile.is_doctor or user_profile.is_nurse %}
+                <div class="btn-group me-2">
+                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        Filter: {% if current_filter == 'all' %}All (My Hospital)
+                                {% elif current_filter == 'pending_my_approval' %}Pending My Approval
+                                {% elif current_filter == 'pending_doctor_approval_all' %}Pending Doctor Approval (All)
+                                {% elif current_filter == 'approved_by_doctor' %}Approved by Doctor
+                                {% else %}{{ current_filter|title }}
+                                {% endif %}
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'core:index' %}?filter=all">All (My Hospital)</a></li>
+                        {% if user_profile.is_hospital_admin or user_profile.is_doctor %}
+                        <li><a class="dropdown-item" href="{% url 'core:index' %}?filter=pending_my_approval">Pending My Approval</a></li>
+                        {% endif %}
+                        <li><a class="dropdown-item" href="{% url 'core:index' %}?filter=pending_doctor_approval_all">Pending Doctor Approval (All Staff)</a></li>
+                        <li><a class="dropdown-item" href="{% url 'core:index' %}?filter=approved_by_doctor">Approved by Doctor</a></li>
+                    </ul>
+                </div>
+                {% elif user_profile and user_profile.is_police %}
+                    {# This is just a label, actual filtering is in views.py #}
+                    <span class="badge bg-info text-dark fs-6">
+                        {% if current_filter == 'police_view' %}
+                            Police Queue (Pending & Processed)
+                        {% else %}
+                            Police View <!-- Fallback, should ideally not happen if view logic is correct -->
+                        {% endif %}
+                    </span>
+                {% endif %}
+            </div>            
+            {% if not user_profile.is_police %}
+            <a href="{% url 'core:addIncident' %}" class="btn btn-outline-primary">Add an Incident</a>
+            {% endif %}
+        </div>
+        <div class="table-responsive" >
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>S.N.</th>
+                        <th>Title</th>
+                        <th>Name of Patient</th>
+                        <th>Date of Accident</th>
+                        <th>Date of Admission</th>
+                        <th>Hospital</th>
+                        <th>Status</th>
+                        <th>Urgency</th>
+                        <th>Triggered</th>
+                        <th>Police Acknowledged</th>
+                        <th>Resolved</th>
+                        <th>Created Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for incident in Incidents %}
+                        <tr>
+                            <td>{{forloop.counter}}</td>
+                            <td>
+                                {% if user_profile.is_hospital_admin or user_profile.is_doctor or user_profile.is_nurse or user_profile.is_police %}
+                                    <a href="{{ incident.get_absolute_url }}" class="btn btn-sm btn-outline-info">View</a>
+                                {% else %}
+                                    <a href="{{ incident.get_absolute_url }}">{{incident.Incident_Type}}</a>
+                                {% endif %}
+                            </td>
+                            <td>{{incident.Name_of_Patient}}</td>
+                            <td>{{incident.Date_of_Accident}}</td>
+                            <td>{{incident.Date_of_Admission}}</td>
+                            <td>{{incident.hospital.name|default:"N/A"}}</td>
+                            <td>{{incident.get_status_display}}</td>
+                            <td>{{incident.get_urgency_display}}</td>
+                            <td>{{incident.triggered}}</td>
+                            <td>{{incident.is_acknowledged_by_police|yesno:"Yes,No"}}</td>
+                             <td>{{incident.resolved|yesno:"Yes,No"}}</td>
+                            <td>{{incident.created_at}}</td>
+                            {% if request.user.is_authenticated and request.user.is_staff %}
+                            <td>
+                                {# Removed the <a> tag inside the button for cleaner Bootstrap styling #}
+                                <a href="{% url 'core:deleteIncident' incident.pk %}" class="btn btn-warning btn-sm">Delete</a> {# Added btn-sm for smaller button #}
+                            </td>
+                            {% else %}
+                             <td></td> {# Add empty cell if user cannot delete #}
+                            {% endif %}
+                        </tr>
+                    {% empty %}
+                        <tr>
+                           <td colspan="12" class="text-center">No incidents found.</td> {# Updated colspan #}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

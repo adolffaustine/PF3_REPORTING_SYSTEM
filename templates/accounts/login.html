@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+    
+<head>
+	<title>Login</title>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css" integrity="sha384-gfdkjb5BdAXd+lj+gudLWI+BXq4IuLW5IT+brZEZsLFm++aCMlF1V92rMkPaX4PP" crossorigin="anonymous">
+
+
+	<style>
+		body,
+		html {
+			margin: 0;
+			padding: 0;
+			height: 100%;
+		    background: #f0f2f5; /* Light gray background for better contrast */
+
+			background-size: cover; /* Add this line */
+			display: flex;
+            align-items: center; /* Vertically center content */
+            justify-content: center; /* Horizontally center content */
+		}
+		 .main-container {
+            display: flex;
+            flex-direction: column; /* Stack intro text and login card */
+            align-items: center;
+            width: 100%;
+            max-width: 800px; /* Max width for the content area */
+            padding: 20px;
+        }
+		.user_card {
+			width: 350px;
+			background: #ffffff; /* White background for the card */
+
+			position: relative;
+			justify-content: center;
+			flex-direction: column;
+			padding: 10px;
+			box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+			-webkit-box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+			-moz-box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+			border-radius: 5px;
+			margin-top: 20px; /* Space between intro and card */
+
+
+		}
+
+		.form_container {
+			margin-top: 20px;
+		}
+        .intro_text_container {
+            text-align: center;
+            color: #333; /* Darker text for readability */
+            margin-bottom: 30px;
+        }
+        .intro_text_container h1 {
+            font-size: 2.5rem;
+            color: #007bff; /* System primary color */
+            margin-bottom: 10px;
+        }
+
+		#form-title{
+			color: #333;
+			
+		}
+
+		.login_btn {
+			width: 100%;
+			background: #33ccff !important;
+			color: white !important;
+		}
+		.login_btn:focus {
+			box-shadow: none !important;
+			outline: 0px !important;
+		}
+		.login_container {
+			padding: 0 2rem;
+		}
+		.input-group-text {
+			background: #007bff !important; /* Changed to primary color */
+
+			color: white !important;
+			border: 0 !important;
+			border-radius: 0.25rem 0 0 0.25rem !important;
+		}
+		.input_user,
+		.input_pass:focus {
+			box-shadow: none !important;
+			outline: 0px !important;
+		}
+
+		#messages{
+			background-color: grey;
+			color: #fff;
+			padding: 10px;
+			margin-top: 10px;
+		}
+	</style>
+
+</head>
+<body>
+	<div class="main-container">
+        <div class="intro_text_container">
+            <h1>PF3 Reporting System</h1>
+            <p class="lead">Streamlining Accidental Victim Reporting and Hospital Treatment Authorization.</p>
+            <p>Please log in with your credentials to access the system. If you are a victim or reporting on behalf of one, ensure you have the necessary information ready.</p>
+        </div>
+
+						 <div class="user_card">
+            <div class="d-flex justify-content-center">
+                <h3 id="form-title">USER LOGIN</h3>
+            </div>
+            <div class="d-flex justify-content-center form_container">
+                <form method="POST" action="">
+                    {% csrf_token %}
+                    <div class="input-group mb-3">
+                        <div class="input-group-append">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                        </div>
+                        {{ form.username }} {# Assuming form is passed from view #}
+                        {# <input type="text" name="username" placeholder="Username..." class="form-control"> #}
+                    </div>
+                    <div class="input-group mb-2">
+                        <div class="input-group-append">
+                            <span class="input-group-text"><i class="fas fa-key"></i></span>
+                        </div>
+                        {{ form.password }}
+                        {# <input type="password" name="password" placeholder="Password..." class="form-control" > #}
+                    </div>
+
+				  <div class="d-flex justify-content-center mt-3 login_container">
+                        <input class="btn login_btn" type="submit" value="Login">
+                    </div>
+                </form>
+            </div>
+			 {% if messages %}
+                {% for message in messages %}
+                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %} mt-3 text-center" role="alert" id="messages">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="mt-4">
+                <div class="d-flex justify-content-center links">
+                    Don't have an account? <a href="{% url 'accounts:register' %}" class="ml-2">Sign Up</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

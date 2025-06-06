@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>PF3 Form - {{ incident.Incident_Type|default:"Incident Report" }}</title>
+    <style>
+        body {
+            font-family: "Helvetica", "Arial", sans-serif;
+            font-size: 11px; /* Slightly reduced for more content per page */
+            line-height: 1.5;
+            margin: 20px;
+        }
+        h1 { /* Main title "TANZANIA POLICE FORCE" */
+            font-size: 18px; /* Adjusted */
+            text-align: center;
+            border-bottom: 1px solid #000;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+        }
+        .main-header { /* "MEDICAL EXAMINATION REPORTING SYSTEM - PF3 FORM" */
+            font-size: 14px; /* Adjusted */
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .section {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            page-break-inside: avoid; /* Try to keep sections from breaking across pages */
+        }
+        .section h2 { /* PART I, PART II etc. */
+            font-size: 13px; /* Adjusted */
+            margin-top: 0;
+            border-bottom: 1px dotted #eee;
+            padding-bottom: 4px;
+            margin-bottom: 8px;
+        }
+        .section h3 { /* For sub-sections like in Part IV: A. General */
+            font-size: 12px; /* Adjusted */
+            margin-top: 12px;
+            margin-bottom: 4px;
+            font-weight: bold;
+        }
+        strong {
+            font-weight: bold;
+        }
+        p {
+            margin: 4px 0; /* Adjusted */
+        }
+        .signature-area {
+            margin-top: 25px;
+            padding-top: 8px;
+            border-top: 1px solid #000;
+        }
+        .signature-area p {
+            margin-bottom: 15px;
+        }
+        table { /* Basic table styling if you ever add tables */
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 4px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>TANZANIA POLICE FORCE</h1>
+    <p class="main-header">MEDICAL EXAMINATION REPORTING SYSTEM - PF3 FORM</p>
+
+    <div class="section">
+        <h2>PART I: REQUEST FOR MEDICAL EXAMINATIONS</h2>
+        <p>(to be completed by a medical examiner reporting medical examination)</p>
+        <p><strong>Case File No. (Assigned by Police):</strong> {{ incident.case_file_no|default:"Pending Assignment" }}</p>
+        <p><strong>Police Station (Recorded by Police):</strong> {{ incident.police_station|default:"Pending Assignment" }}</p>
+        <p><strong>Incident Type:</strong> {{ incident.Incident_Type|default:"N/A" }}</p>
+        <p><strong>Name of Patient:</strong> {{ incident.Name_of_Patient|default:"N/A" }}</p>
+        <p><strong>Date of Accident:</strong> {{ incident.Date_of_Accident|date:"Y-m-d H:i"|default:"N/A" }}</p>
+        <p><strong>Date of Admission:</strong> {{ incident.Date_of_Admission|date:"Y-m-d H:i"|default:"N/A" }}</p>
+        <p><strong>Urgency:</strong> {{ incident.get_urgency_display|default:"N/A" }}</p>
+        <p><strong>Hospital:</strong> {{ incident.hospital.name|default:"N/A" }}</p>
+        <p><strong>Contact Details for Police (from Hospital/Doctor):</strong> {{ incident.contact_details_for_police|linebreaksbr|default:"N/A" }}</p>
+        <p><strong>Contact Details for Hospital (from Police):</strong> {{ incident.contact_details_for_hospital|linebreaksbr|default:"N/A" }}</p>
+        <p><strong>Description:</strong> {{ incident.description|linebreaksbr|default:"N/A" }}</p>
+        <p><strong>Triggered:</strong> {{ incident.triggered|yesno:"Yes,No,N/A" }}</p>
+        <p><strong>Resolved:</strong> {{ incident.resolved|yesno:"Yes,No,N/A" }}</p>
+        <p><strong>Assigned To (Team):</strong> {{ incident.assigned_to.team_name|default:"N/A" }}</p>
+        <p><strong>Reported by:</strong> {{ incident.reported_by.user.username|default:"N/A" }} on {{ incident.created_at|date:"Y-m-d H:i" }}</p>
+        <p><strong>Current Status:</strong> {{ incident.get_status_display|default:"N/A" }}</p>
+    </div>
+
+    <div class="section">
+        <h2>PART II: MEDICAL DETAILS OF THE ALLEGED CASE</h2>
+        <p><strong>Patient File No.:</strong> {{ incident.patient_file_no|default:"N/A" }}</p>
+        <p><strong>Nature of Complaint:</strong> {{ incident.nature_of_complaint|linebreaksbr|default:"N/A" }}</p>
+        <p><strong>Estimated Age:</strong> {{ incident.estimated_age|default:"N/A" }}</p>
+        <p><strong>General Physical/Mental Examination:</strong> {{ incident.general_physical_mental_examination|linebreaksbr|default:"N/A" }}</p>
+        <p><strong>Medical History:</strong> {{ incident.medical_history|linebreaksbr|default:"N/A" }}</p>
+        <p><strong>Condition/Appearance of Clothes:</strong> {{ incident.condition_appearance_of_clothes|linebreaksbr|default:"N/A" }}</p>
+        <p><strong>Name of Guardian:</strong> {{ incident.guardian_name|default:"N/A" }}</p>
+        <p><strong>Relationship of Guardian:</strong> {{ incident.guardian_relationship|default:"N/A" }}</p>
+    </div>
+
+    <div class="section">
+        <h2>PART III: ASSAULT, ACCIDENT AND OTHER CASES</h2>
+        <p>(to be completed by a medical examiner)</p>
+        <p><strong>Approximately Age of Injury:</strong> {{ incident.approx_age_of_injury|default:"N/A" }}</p>
+        <p><strong>Treatment if Received Any:</strong> {{ incident.treatment_received|linebreaksbr|default:"N/A" }}</p>
+        <p><strong>Description of Site, Situation and Depth of Injury Sustained:</strong> {{ incident.description_of_site_situation_depth_of_injury|linebreaksbr|default:"N/A" }}</p>
+        <p><strong>Type of Weapon or Object Used:</strong> {{ incident.type_of_weapon_or_object_used|default:"N/A" }}</p>
+        <p><strong>Immediate Degree of Injury:</strong> {{ incident.get_immediate_degree_of_injury_display|default:"N/A" }}</p>
+        <p><strong>Details of Specimen Collected:</strong> {{ incident.details_of_specimen_collected|linebreaksbr|default:"N/A" }}</p>
+    </div>
+
+    <div class="section">
+        <h2>PART IV: SEXUAL ASSAULT CASE</h2>
+        <p>(To be completed by a medical examiner after part II and III)</p>
+
+        <h3>A. General</h3>
+        <p><strong>(i) Nature of Complaint:</strong> {{ incident.sa_nature_of_complaint|linebreaksbr|default:"N/A" }}</p>
+        <p><strong>(ii) Estimated Age of Person Examined:</strong> {{ incident.sa_estimated_age|default:"N/A" }}</p>
+
+        <h3>B. FEMALE</h3>
+        <p><strong>(i) Describe physical state of and any injuries to genitalia with special reference to labia majora, labia minora, vagina, cervix, anus and establish evidence of penetration:</strong><br>{{ incident.sa_female_genitalia_injuries|linebreaksbr|default:"N/A" }}</p>
+        <p><strong>(ii) Note the presence of venereal infections or any discharge, blood from genitalia/anus:</strong><br>{{ incident.sa_female_infections_discharge_blood|linebreaksbr|default:"N/A" }}</p>
+        <p><strong>(iii) Details of specimen of smears collected including public hairs and blood:</strong><br>{{ incident.sa_female_specimens_collected|linebreaksbr|default:"N/A" }}</p>
+
+        <h3>C. MALE</h3>
+        <p><strong>(i) Describe the physical state of and any injuries to genitalia including anus establish penetration in case of anal intercourse:</strong><br>{{ incident.sa_male_genitalia_injuries|linebreaksbr|default:"N/A" }}</p>
+        <p><strong>(ii) Note the presence of venereal infection or any discharge around anus and penis:</strong><br>{{ incident.sa_male_infections_discharge_blood|linebreaksbr|default:"N/A" }}</p>
+        <p><strong>(iii) Details of specimen or smears collected including pubic hair and blood:</strong><br>{{ incident.sa_male_specimens_collected|linebreaksbr|default:"N/A" }}</p>
+
+        <h3>MEDICAL PRACTITIONER REMARKS:</h3>
+        <p>{{ incident.sa_practitioner_remarks|linebreaksbr|default:"N/A" }}</p>
+        <p><strong>Name and signature of medical practitioner:</strong></p>
+        <p><strong>Name:</strong> {{ incident.sa_practitioner_name|default:"_________________________" }}</p>
+        <p><strong>Qualification:</strong> {{ incident.sa_practitioner_qualification|default:"_________________________" }}</p>
+        <p><strong>Registration number:</strong> {{ incident.sa_practitioner_reg_no|default:"_________________________" }}</p>
+        <p><strong>Signature:</strong> _________________________</p>
+        <p><strong>Date:</strong> {{ incident.sa_practitioner_date|date:"Y-m-d"|default:"_________________________" }}</p>
+        <p><strong>Official stamp:</strong> {{ incident.sa_official_stamp_details|default:"(Space for Stamp)" }}</p>
+    </div>
+
+    {% if incident.is_approved_by_doctor %}
+    <div class="section">
+        <h2>Doctor's Approval (Workflow)</h2>
+        <p><strong>Approved by:</strong> Dr. {{ incident.doctor_approved_by.user.get_full_name|default:incident.doctor_approved_by.user.username|default:"N/A" }}</p>
+        <p><strong>Approval Date:</strong> {{ incident.doctor_approval_date|date:"Y-m-d H:i"|default:"N/A" }}</p>
+        {% if incident.doctor_comments %}<p><strong>Comments:</strong> {{ incident.doctor_comments|linebreaksbr|default:"N/A" }}</p>{% endif %}
+        <div class="signature-area"><p>Doctor's Signature (as per system record): Electronically Approved</p></div>
+    </div>
+    {% endif %}
+
+    {% if incident.is_acknowledged_by_police %}
+    <div class="section">
+        <h2>Police Acknowledgement (Workflow)</h2>
+        <p><strong>Case File No.:</strong> {{ incident.case_file_no|default:"N/A" }}</p>
+        <p><strong>Police Station:</strong> {{ incident.police_station|default:"N/A" }}</p>
+        <p><strong>Acknowledged by:</strong> Officer {{ incident.police_acknowledged_by.user.get_full_name|default:incident.police_acknowledged_by.user.username|default:"N/A" }}</p>
+        <p><strong>Acknowledgement Date:</strong> {{ incident.police_acknowledgement_date|date:"Y-m-d H:i"|default:"N/A" }}</p>
+        {% if incident.police_comments %}<p><strong>Comments:</strong> {{ incident.police_comments|linebreaksbr|default:"N/A" }}</p>{% endif %}
+        {% if incident.assigned_police_officer %}
+            <p><strong>Case Assigned to Officer:</strong> {{ incident.assigned_police_officer.user.get_full_name|default:incident.assigned_police_officer.user.username }}
+                {% if incident.assigned_police_officer.phone_number %} ({{ incident.assigned_police_officer.phone_number }}){% endif %}
+            </p>
+        {% endif %}
+        <p><strong>Police Contact Provided to Hospital:</strong> {{ incident.contact_details_for_hospital|linebreaksbr|default:"N/A" }}</p>
+        <div class="signature-area"><p>Police Acknowledgement (as per system record): Electronically Acknowledged</p></div>
+    </div>
+    {% endif %}
+
+    <p style="text-align:center; margin-top:30px; font-size:10px;"><em>Generated on: {% now "Y-m-d H:i" %}</em></p>
+</body>
+</html>

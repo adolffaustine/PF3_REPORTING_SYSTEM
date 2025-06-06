@@ -1,0 +1,268 @@
+{% extends 'base/base.html' %}
+{# Removed {% load crispy_forms_tags %} as we are not using crispy tags here #}
+
+{% block title %}Report Incident{% endblock %}
+
+{% block body %}
+    <div class="container-fluid container-mine d-flex flex-column flex-grow-1">
+         <div class="text-center">
+            <h1>TANZANIA POLICE FORCE</h1>
+            <h1>MEDICAL EXAMINATION REPORTING SYSTEM</h1>
+        </div>
+        <form method="post" class="d-flex flex-column flex-grow-1">
+            <div class="text-center mt-3">
+                <h1>PART I: REQUEST FOR MEDICAL EXAMINATIONS</h1>
+                <p>(to be completed by a medical examiner reporting medical examination)</p>
+            </div>
+            {% csrf_token %}
+            
+            <div class="flex-grow-1">
+                {# PART I Fields - Manual Rendering (case_file_no and police_station removed) #}
+                <div class="mb-3">
+                    <label for="{{ form.Incident_Type.id_for_label }}" class="form-label">{{ form.Incident_Type.label }}</label>
+                    {{ form.Incident_Type }}
+                    {{ form.Incident_Type.errors }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.Name_of_Patient.id_for_label }}" class="form-label">{{ form.Name_of_Patient.label }}</label>
+                    {{ form.Name_of_Patient }}
+                    {{ form.Name_of_Patient.errors }}
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.Date_of_Accident.id_for_label }}" class="form-label">{{ form.Date_of_Accident.label }}</label>
+                        {{ form.Date_of_Accident }}
+                        {{ form.Date_of_Accident.errors }}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.Date_of_Admission.id_for_label }}" class="form-label">{{ form.Date_of_Admission.label }}</label>
+                        {{ form.Date_of_Admission }}
+                        {{ form.Date_of_Admission.errors }}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.urgency.id_for_label }}" class="form-label">{{ form.urgency.label }}</label>
+                        {{ form.urgency }}
+                        {{ form.urgency.errors }}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.hospital.id_for_label }}" class="form-label">{{ form.hospital.label }}</label>
+                        {{ form.hospital }}
+                        {{ form.hospital.errors }}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                    {{ form.description }}
+                    {{ form.description.errors }}
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            {{ form.triggered }}
+                            <label for="{{ form.triggered.id_for_label }}" class="form-check-label">{{ form.triggered.label }}</label>
+                        </div>
+                        {{ form.triggered.errors }}
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            {{ form.resolved }}
+                            <label for="{{ form.resolved.id_for_label }}" class="form-check-label">{{ form.resolved.label }}</label>
+                        </div>
+                        {{ form.resolved.errors }}
+                    </div>
+                    <div class="col-md-4">
+                        <label for="{{ form.assigned_to.id_for_label }}" class="form-label">{{ form.assigned_to.label }}</label>
+                        {{ form.assigned_to }}
+                        {{ form.assigned_to.errors }}
+                    </div>
+                </div>
+
+                {# PART II Heading #}
+                <div class="text-center mt-4 mb-3">
+                         <h2>PART II: MEDICAL DETAILS OF THE ALLEGED CASE</h2>
+                </div>
+               
+                {# PART II Fields - Manual Rendering #}
+                <div class="mb-3">
+                    <label for="{{ form.patient_file_no.id_for_label }}" class="form-label">{{ form.patient_file_no.label }}</label>
+                    {{ form.patient_file_no }}
+                    {{ form.patient_file_no.errors }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.nature_of_complaint.id_for_label }}" class="form-label">{{ form.nature_of_complaint.label }}</label>
+                    {{ form.nature_of_complaint }}
+                    {{ form.nature_of_complaint.errors }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.estimated_age.id_for_label }}" class="form-label">{{ form.estimated_age.label }}</label>
+                    {{ form.estimated_age }}
+                    {{ form.estimated_age.errors }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.general_physical_mental_examination.id_for_label }}" class="form-label">{{ form.general_physical_mental_examination.label }}</label>
+                    {{ form.general_physical_mental_examination }}
+                    {{ form.general_physical_mental_examination.errors }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.medical_history.id_for_label }}" class="form-label">{{ form.medical_history.label }}</label>
+                    {{ form.medical_history }}
+                    {{ form.medical_history.errors }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.condition_appearance_of_clothes.id_for_label }}" class="form-label">{{ form.condition_appearance_of_clothes.label }}</label>
+                    {{ form.condition_appearance_of_clothes }}
+                    {{ form.condition_appearance_of_clothes.errors }}
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.guardian_name.id_for_label }}" class="form-label">{{ form.guardian_name.label }}</label>
+                        {{ form.guardian_name }}
+                        {{ form.guardian_name.errors }}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.guardian_relationship.id_for_label }}" class="form-label">{{ form.guardian_relationship.label }}</label>
+                        {{ form.guardian_relationship }}
+                        {{ form.guardian_relationship.errors }}
+                    </div>
+                </div>
+                
+            </div>
+            {# PART III Heading #}
+                <div class="text-center mt-4 mb-3">
+                         <h2>PART III: ASSAULT, ACCIDENT AND OTHER CASES</h2>
+                         <p>(to be completed by a medical examiner)</p>
+                </div>
+
+                {# PART III Fields - Manual Rendering #}
+                <div class="mb-3">
+                    <label for="{{ form.approx_age_of_injury.id_for_label }}" class="form-label">{{ form.approx_age_of_injury.label }}</label>
+                    {{ form.approx_age_of_injury }}
+                    {{ form.approx_age_of_injury.errors }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.contact_details_for_police.id_for_label }}" class="form-label">{{ form.contact_details_for_police.label }}</label>
+                    {{ form.contact_details_for_police }}
+                    {{ form.contact_details_for_police.errors }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.treatment_received.id_for_label }}" class="form-label">{{ form.treatment_received.label }}</label>
+                    {{ form.treatment_received }}
+                    {{ form.treatment_received.errors }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.description_of_site_situation_depth_of_injury.id_for_label }}" class="form-label">{{ form.description_of_site_situation_depth_of_injury.label }}</label>
+                    {{ form.description_of_site_situation_depth_of_injury }}
+                    {{ form.description_of_site_situation_depth_of_injury.errors }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.type_of_weapon_or_object_used.id_for_label }}" class="form-label">{{ form.type_of_weapon_or_object_used.label }}</label>
+                    {{ form.type_of_weapon_or_object_used }}
+                    {{ form.type_of_weapon_or_object_used.errors }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.immediate_degree_of_injury.id_for_label }}" class="form-label">{{ form.immediate_degree_of_injury.label }}</label>
+                    {{ form.immediate_degree_of_injury }}
+                    {{ form.immediate_degree_of_injury.errors }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.details_of_specimen_collected.id_for_label }}" class="form-label">{{ form.details_of_specimen_collected.label }}</label>
+                    {{ form.details_of_specimen_collected }}
+                    {{ form.details_of_specimen_collected.errors }}
+                </div>
+                  {# PART IV Heading #}
+                <div class="text-center mt-4 mb-3">
+                    <h2>PART IV: SEXUAL ASSAULT CASE</h2>
+                    <p>(To be completed by a medical examiner after part II and III)</p>
+                </div>
+
+                {# PART IV Fields - Manual Rendering #}
+                <h5 class="mt-4">A. General</h5>
+                <div class="mb-3">
+                    <label for="{{ form.sa_nature_of_complaint.id_for_label }}" class="form-label">{{ form.sa_nature_of_complaint.label }}</label>
+                    {{ form.sa_nature_of_complaint }}
+                    {{ form.sa_nature_of_complaint.errors }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.sa_estimated_age.id_for_label }}" class="form-label">{{ form.sa_estimated_age.label }}</label>
+                    {{ form.sa_estimated_age }}
+                    {{ form.sa_estimated_age.errors }}
+                </div>
+
+                <h5 class="mt-4">B. FEMALE</h5>
+                <div class="mb-3">
+                    <label for="{{ form.sa_female_genitalia_injuries.id_for_label }}" class="form-label">{{ form.sa_female_genitalia_injuries.label }}</label>
+                    {{ form.sa_female_genitalia_injuries }}
+                    {{ form.sa_female_genitalia_injuries.errors }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.sa_female_infections_discharge_blood.id_for_label }}" class="form-label">{{ form.sa_female_infections_discharge_blood.label }}</label>
+                    {{ form.sa_female_infections_discharge_blood }}
+                    {{ form.sa_female_infections_discharge_blood.errors }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.sa_female_specimens_collected.id_for_label }}" class="form-label">{{ form.sa_female_specimens_collected.label }}</label>
+                    {{ form.sa_female_specimens_collected }}
+                    {{ form.sa_female_specimens_collected.errors }}
+                </div>
+
+                <h5 class="mt-4">C. MALE</h5>
+                <div class="mb-3">
+                    <label for="{{ form.sa_male_genitalia_injuries.id_for_label }}" class="form-label">{{ form.sa_male_genitalia_injuries.label }}</label>
+                    {{ form.sa_male_genitalia_injuries }}
+                    {{ form.sa_male_genitalia_injuries.errors }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.sa_male_infections_discharge_blood.id_for_label }}" class="form-label">{{ form.sa_male_infections_discharge_blood.label }}</label>
+                    {{ form.sa_male_infections_discharge_blood }}
+                    {{ form.sa_male_infections_discharge_blood.errors }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.sa_male_specimens_collected.id_for_label }}" class="form-label">{{ form.sa_male_specimens_collected.label }}</label>
+                    {{ form.sa_male_specimens_collected }}
+                    {{ form.sa_male_specimens_collected.errors }}
+                </div>
+
+                <h5 class="mt-4">MEDICAL PRACTITIONER REMARKS</h5>
+                <div class="mb-3">
+                    <label for="{{ form.sa_practitioner_remarks.id_for_label }}" class="form-label">{{ form.sa_practitioner_remarks.label }}</label>
+                    {{ form.sa_practitioner_remarks }}
+                    {{ form.sa_practitioner_remarks.errors }}
+                </div>
+                 <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.sa_practitioner_name.id_for_label }}" class="form-label">{{ form.sa_practitioner_name.label }}</label>
+                        {{ form.sa_practitioner_name }}
+                        {{ form.sa_practitioner_name.errors }}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.sa_practitioner_qualification.id_for_label }}" class="form-label">{{ form.sa_practitioner_qualification.label }}</label>
+                        {{ form.sa_practitioner_qualification }}
+                        {{ form.sa_practitioner_qualification.errors }}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="{{ form.sa_practitioner_reg_no.id_for_label }}" class="form-label">{{ form.sa_practitioner_reg_no.label }}</label>
+                        {{ form.sa_practitioner_reg_no }}
+                        {{ form.sa_practitioner_reg_no.errors }}
+                    </div>
+                    <div class="col-md-4">
+                        <label for="{{ form.sa_practitioner_date.id_for_label }}" class="form-label">{{ form.sa_practitioner_date.label }}</label>
+                        {{ form.sa_practitioner_date }}
+                        {{ form.sa_practitioner_date.errors }}
+                    </div>
+                    <div class="col-md-4">
+                        <label for="{{ form.sa_official_stamp_details.id_for_label }}" class="form-label">{{ form.sa_official_stamp_details.label }}</label>
+                        {{ form.sa_official_stamp_details }}
+                        {{ form.sa_official_stamp_details.errors }}
+                    </div>
+                </div>
+            <div class="mt-auto pt-3">
+                 <input type="submit" value="Add" class="btn btn-outline-primary">
+                 <a href="{% url 'core:index' %}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}
